@@ -218,3 +218,4 @@ if __name__ == '__main__':
     print(f"{Fore.MAGENTA}💡 Open http://localhost:5000 in your browser to use the frontend")
     
     app.run(debug=True, host='0.0.0.0', port=5000)
+

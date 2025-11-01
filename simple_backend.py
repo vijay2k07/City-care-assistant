@@ -204,3 +204,4 @@ if __name__ == '__main__':
     print(f"{Fore.MAGENTA}💡 This backend uses the same logic as your heat_health_assistant_project.py")
     
     app.run(debug=True, host='0.0.0.0', port=5000)
+
