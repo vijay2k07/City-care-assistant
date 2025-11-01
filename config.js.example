@@ -1,0 +1,19 @@
+// API Keys Configuration
+// Copy this file to config.js and replace the placeholder values with your actual API keys
+
+export const API_KEYS = {
+    // Get your free API key from: https://openweathermap.org/api
+    OPENWEATHER: 'your-openweather-api-key-here',
+    
+    // Get your free API key from: https://makersuite.google.com/app/apikey
+    GEMINI: 'your-google-gemini-api-key-here',
+    
+    // Get your free API key from: https://www.geoapify.com/get-started-with-maps-api
+    GEOAPIFY: 'your-geoapify-api-key-here'
+};
+
+// Instructions:
+// 1. Copy this file: cp config.js.example config.js
+// 2. Replace the placeholder values above with your actual API keys
+// 3. Never commit config.js to version control (it's already in .gitignore)
+// 4. Keep your API keys secure and don't share them publicly

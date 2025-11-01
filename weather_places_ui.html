@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>City care AI</title>
+  <style>
+    :root{
+      --bg: #0f1724; /* dark slate */
+      --card: #0b1220;
+      --muted: #9aa4b2;
+      --accent: #4dd0e1;
+      --accent-2: #7c5cff;
+      --glass: rgba(255,255,255,0.03);
+      --radius: 12px;
+      --shadow: 0 8px 20px rgba(2,6,23,0.6);
+      --glass-2: rgba(255,255,255,0.02);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: linear-gradient(180deg,var(--bg),#071026 140%);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+
+    .app{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#021025;box-shadow:0 6px 18px rgba(125,90,255,0.12)}
+    h1{font-size:18px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .card{background:linear-gradient(180deg,var(--card),var(--glass));border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+    .controls{display:flex;gap:8px;align-items:center}
+    input[type="text"]{flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;outline:none}
+    button{padding:10px 14px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#021025;font-weight:600;cursor:pointer;transition:all 0.2s ease}
+    button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(125,90,255,0.3)}
+    button:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent);}
+    button.secondary:hover{background:rgba(255,255,255,0.05)}
+
+    .weather-block{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+    .temp{font-size:38px;font-weight:700}
+    .desc{color:var(--muted)}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .tips{margin-top:12px}
+    ol.tips-list{padding-left:18px;color:var(--muted);margin:0}
+    ol.tips-list li{margin-bottom:6px}
+
+    /* Right column */
+    .places-list{display:flex;flex-direction:column;gap:10px}
+    .place-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:var(--glass-2);transition:all 0.2s ease}
+    .place-item:hover{background:rgba(255,255,255,0.05);transform:translateX(2px)}
+    .place-item .meta{font-size:13px;color:var(--muted)}
+    .place-item .status{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:600}
+
+    /* Theatre schedule card */
+    .theatre-schedule{display:flex;flex-direction:column;gap:8px}
+    .movie-row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .movie-row:last-child{border-bottom:none}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .tag{font-size:12px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.02)}
+    .status-safe{background:rgba(16,185,129,0.1);color:var(--success);border-color:rgba(16,185,129,0.2)}
+    .status-caution{background:rgba(245,158,11,0.1);color:var(--warning);border-color:rgba(245,158,11,0.2)}
+    .status-urgent{background:rgba(239,68,68,0.1);color:var(--danger);border-color:rgba(239,68,68,0.2)}
+
+    /* animated entrances */
+    .card{transform-origin:top left;transition:transform .28s cubic-bezier(.2,.9,.32,1),opacity .28s}
+    .card.enter{transform:translateY(0);opacity:1}
+    .card.hidden{transform:translateY(8px);opacity:0}
+
+    /* custom cursor (hidden on touch) */
+    .cursor-dot, .cursor-ring{position:fixed;pointer-events:none;z-index:9999;mix-blend-mode:screen;transform:translate(-50%,-50%);}
+    .cursor-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 4px 12px rgba(125,90,255,0.18)}
+    .cursor-ring{width:36px;height:36px;border-radius:50%;border:2px solid rgba(125,90,255,0.14);backdrop-filter: blur(3px)}
+
+    /* loading states */
+    .loading{opacity:0.6;pointer-events:none}
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.2);border-top:2px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+    /* responsive */
+    @media (max-width:920px){
+      .app{grid-template-columns:1fr}
+      body{padding:16px}
+    }
+    @media (max-width:480px){
+      .controls{flex-direction:column;gap:8px}
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div>
+      <header>
+        <div class="logo">🌡</div>
+        <div>
+          <h1>Heat Health Assistant</h1>
+          <p class="lead">Enter a city to get weather, AI health tips, and nearby places. Connect your Python backend or use JSON fallback.</p>
+        </div>
+      </header>
+
+      <div class="card" id="controlsCard">
+        <div class="controls">
+          <input id="cityInput" type="text" placeholder="Enter city (e.g., Chennai)" aria-label="City name">
+          <button id="fetchBtn">Fetch</button>
+          <button id="pasteBtn" class="secondary">Paste JSON</button>
+        </div>
+
+        <div id="pasteArea" style="display:none;margin-top:10px;">
+          <textarea id="jsonInput" style="width:100%;height:120px;border-radius:8px;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit;resize:vertical" placeholder="Paste JSON data from your Python script here..."></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px;"><button id="applyJson">Apply JSON</button><button id="cancelJson" class="secondary">Cancel</button></div>
+        </div>
+
+        <div class="weather-block hidden" id="weatherBlock">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="temp" id="tempText">--°C</div>
+              <div class="desc" id="descText">--</div>
+            </div>
+            <div class="tag" id="heatIndexTag">Heat index: --</div>
+          </div>
+
+          <div class="grid">
+            <div class="card" style="padding:10px">
+              <div class="muted">Humidity</div>
+              <div id="humidityText">--%</div>
+            </div>
+            <div class="card" style="padding:10px">
+              <div class="muted">Coordinates</div>
+              <div id="coordsText">--</div>
+            </div>
+          </div>
+
+          <div class="tips">
+            <div class="muted">AI Health Tips</div>
+            <ol class="tips-list" id="tipsList"><li>--</li></ol>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;color:var(--muted);font-size:13px">Tip: If you don't have a backend, click <strong>Paste JSON</strong> and paste the JSON output from your Python script.</div>
+      </div>
+
+      <div style="height:12px"></div>
+      <div class="card hidden" id="theatreCard">
+        <div style="display:flex;justify-content:space-between;align-items:center"><strong>Theatre Schedule</strong><span class="muted">Local shows</span></div>
+        <div class="theatre-schedule" id="theatreSchedule">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <div>
+      <div class="card" id="placesCard">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Nearby Places</strong>
+          <div class="muted">Showing up to 5 per category</div>
+        </div>
+
+        <div class="places-list" id="placesList">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- custom cursor elements -->
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
+  <script>
+    // ---------- CONFIG: update these endpoints to your Python backend ----------
+    // The Python script can be wrapped with a Flask/FastAPI server that exposes these endpoints:
+    // GET /api/weather?city=Chennai  -> returns JSON with weather, tips, places, theatre_schedule
+    // NOTE: If you don't have a backend the UI lets you paste the JSON output.
+    const WEATHER_ENDPOINT = '/api/weather';
+    // -------------------------------------------------------------------------
+
+    // small helper
+    const $ = (id) => document.getElementById(id);
+
+    const fetchBtn = $('fetchBtn');
+    const cityInput = $('cityInput');
+    const weatherBlock = $('weatherBlock');
+    const tempText = $('tempText');
+    const humidityText = $('humidityText');
+    const descText = $('descText');
+    const coordsText = $('coordsText');
+    const tipsList = $('tipsList');
+    const heatIndexTag = $('heatIndexTag');
+    const placesList = $('placesList');
+    const theatreSchedule = $('theatreSchedule');
+
+    const pasteBtn = $('pasteBtn');
+    const pasteArea = $('pasteArea');
+    const jsonInput = $('jsonInput');
+    const applyJson = $('applyJson');
+    const cancelJson = $('cancelJson');
+
+    // simple enter key handler
+    cityInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') fetchForCity() });
+    fetchBtn.addEventListener('click', fetchForCity);
+
+    pasteBtn.addEventListener('click', ()=>{ pasteArea.style.display = 'block'; });
+    cancelJson.addEventListener('click', ()=>{ pasteArea.style.display = 'none'; });
+    applyJson.addEventListener('click', ()=>{
+      try{
+        const data = JSON.parse(jsonInput.value);
+        applyDataToUI(data);
+        pasteArea.style.display = 'none';
+      }catch(err){alert('Invalid JSON: ' + err.message)}
+    })
+
+    async function fetchForCity(){
+      const city = cityInput.value.trim();
+      if(!city) return alert('Please enter a city');
+      
+      fetchBtn.disabled = true;
+      fetchBtn.innerHTML = '<span class="spinner"></span> Loading...';
+      
+      try{
+        // NOTE: adapt to your backend. This example expects a CORS-enabled endpoint.
+        const res = await fetch(WEATHER_ENDPOINT + '?city=' + encodeURIComponent(city));
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        applyDataToUI(data);
+      }catch(err){
+        alert('Could not fetch from backend. Either start your Python server or use the Paste JSON fallback.\n\nError: ' + err.message);
+      }finally{
+        fetchBtn.disabled = false;
+        fetchBtn.textContent = 'Fetch';
+      }
+    }
+
+    function applyDataToUI(data){
+      // expected keys: temperature (C), humidity, description, lat, lon, tips:[], places:{}, theatre_schedule:{name:[{movie,start,end}]}
+      if(!data) return;
+      
+      // show weather
+      tempText.textContent = (data.temperature !== undefined ? (Math.round(data.temperature) + '°C') : '--°C');
+      humidityText.textContent = (data.humidity !== undefined ? data.humidity + '%' : '--%');
+      descText.textContent = data.description || '--';
+      coordsText.textContent = (data.lat && data.lon) ? (data.lat.toFixed(3) + ', ' + data.lon.toFixed(3)) : '--';
+      
+      // heat index calculation (same as Python script)
+      if(data.temperature !== undefined && data.humidity !== undefined){
+        const hi = data.temperature + 0.33*data.humidity - 0.7;
+        heatIndexTag.textContent = 'Heat index: ' + hi.toFixed(1) + '°C';
+      }
+      
+      // AI tips
+      tipsList.innerHTML = '';
+      if(Array.isArray(data.tips)){
+        data.tips.slice(0,5).forEach(t=>{ 
+          const li=document.createElement('li'); 
+          li.textContent=t; 
+          tipsList.appendChild(li); 
+        });
+      } else {
+        tipsList.innerHTML = '<li>No tips available</li>';
+      }
+
+      // places
+      placesList.innerHTML = '';
+      const categories = ['hotel','hospital','movie_theater','cafe','shopping_mall'];
+      categories.forEach(cat=>{
+        const arr = data.places && data.places[cat] ? data.places[cat] : [];
+        const header = document.createElement('div'); 
+        header.style.marginTop='6px'; 
+        header.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><strong>${cat.replace('_',' ')}</strong><span class='muted'>${arr.length} found</span></div>`;
+        placesList.appendChild(header);
+        
+        if(arr.length===0){
+          const none = document.createElement('div'); 
+          none.className='place-item'; 
+          none.textContent='No results'; 
+          placesList.appendChild(none);
+        } else {
+          arr.slice(0,5).forEach(p=>{
+            const item = document.createElement('div'); 
+            item.className='place-item';
+            const left = document.createElement('div'); 
+            left.innerHTML = `<div style='font-weight:600'>${p.name||'Unknown'}</div><div class='meta'>${p.formatted||p.address||''}</div>`;
+            const right = document.createElement('div');
+            
+            if(cat==='hospital'){
+              const status = getHospitalStatus(data.temperature);
+              right.innerHTML = `<div class='status ${status.class}'>${status.text}</div>`;
+            } else if(cat==='movie_theater'){
+              right.innerHTML = `<div class='muted'>Theatre</div>`;
+            } else {
+              right.innerHTML = `<div class='muted'>Nearby</div>`;
+            }
+            
+            item.appendChild(left); 
+            item.appendChild(right);
+            placesList.appendChild(item);
+          })
+        }
+      })
+
+      // theatre schedule
+      theatreSchedule.innerHTML = '';
+      if(data.theatre_schedule){
+        Object.entries(data.theatre_schedule).forEach(([tname, shows])=>{
+          const el = document.createElement('div'); 
+          el.style.marginBottom='6px';
+          el.innerHTML = `<div style='font-weight:700'>${tname}</div>`;
+          shows.forEach(s=>{
+            const row = document.createElement('div'); 
+            row.className='movie-row';
+            row.innerHTML = `<div>${s.movie}</div><div class='muted'>${s.start}:00 - ${s.end}:00</div>`;
+            el.appendChild(row);
+          })
+          theatreSchedule.appendChild(el);
+        })
+      } else {
+        theatreSchedule.innerHTML = '<div class="muted">No schedule provided</div>';
+      }
+
+      // reveal blocks with animation
+      weatherBlock.classList.remove('hidden'); 
+      weatherBlock.classList.add('enter');
+      document.getElementById('theatreCard').classList.remove('hidden'); 
+      document.getElementById('theatreCard').classList.add('enter');
+    }
+
+    function getHospitalStatus(temp){
+      if(temp === undefined) return {text: 'Status unknown', class: 'status-caution'};
+      if(temp < 30) return {text: 'Safe to visit', class: 'status-safe'};
+      if(temp < 40) return {text: 'Caution: stay hydrated', class: 'status-caution'};
+      return {text: 'Only urgent visits', class: 'status-urgent'};
+    }
+
+    // ---------- custom cursor implementation ----------
+    (function(){
+      const dot = document.getElementById('cursorDot');
+      const ring = document.getElementById('cursorRing');
+      let mouseX = window.innerWidth/2, mouseY = window.innerHeight/2;
+      let ringX = mouseX, ringY = mouseY;
+
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if(isTouch){ dot.style.display='none'; ring.style.display='none'; return; }
+
+      window.addEventListener('mousemove', (e)=>{ 
+        mouseX = e.clientX; 
+        mouseY = e.clientY; 
+        dot.style.transform = `translate(${mouseX}px, ${mouseY}px)`; 
+      });
+
+      function animate(){
+        // ring follows with easing
+        ringX += (mouseX - ringX) * 0.14;
+        ringY += (mouseY - ringY) * 0.14;
+        ring.style.transform = `translate(${ringX}px, ${ringY}px)`;
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+
+      // interactive states
+      document.querySelectorAll('button, a, input, textarea').forEach(el=>{
+        el.addEventListener('mouseenter', ()=>{ 
+          ring.style.transform += ' scale(1.12)'; 
+          ring.style.opacity = '0.95'; 
+        });
+        el.addEventListener('mouseleave', ()=>{ 
+          ring.style.opacity = '1'; 
+        });
+      })
+    })();
+
+    // demo: if user wants a quick sample JSON to test
+    function demoSample(){
+      return {
+        temperature: 35.2,
+        humidity: 68,
+        description: 'hot and humid',
+        lat: 13.0827,
+        lon: 80.2707,
+        tips: [
+          'Drink small amounts of water often rather than a lot at once.',
+          'Avoid direct sunlight between 11am-4pm. Use shade and hats.',
+          'Wear loose, light-colored clothing and rest frequently.'
+        ],
+        places: {
+          hotel:[{name:'Hotel SeaView', formatted:'Raja St, Chennai' }],
+          hospital:[{name:'Apollo Hospital', formatted:'Greams Rd' }],
+          movie_theater:[{name:'PVR Phoenix', formatted:'Velachery' }],
+          cafe:[{name:'Brew & Co', formatted:'Mount Road' }],
+          shopping_mall:[{name:'Phoenix MarketCity', formatted:'Velachery'}]
+        },
+        theatre_schedule: {
+          'PVR Phoenix':[ {movie:'Barbie', start:15, end:18}, {movie:'Dune', start:19, end:22} ],
+          'SPI Cinemas':[ {movie:'Spider-Man', start:10, end:13}, {movie:'Fast X', start:14, end:17} ]
+        }
+      }
+    }
+
+    // convenience: allow double-click on logo to load demo
+    document.querySelector('.logo').addEventListener('dblclick', ()=> applyDataToUI(demoSample()));
+
+  </script>
+</body>
+</html>
